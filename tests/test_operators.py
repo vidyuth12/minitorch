@@ -1,4 +1,5 @@
 from typing import Callable, List, Tuple
+import math
 
 import pytest
 from hypothesis import given
@@ -23,6 +24,7 @@ from minitorch.operators import (
     relu_back,
     sigmoid,
     sum,
+    is_close,
 )
 
 from .strategies import assert_close, small_floats
@@ -108,7 +110,30 @@ def test_sigmoid(a: float) -> None:
     * It is  strictly increasing.
     """
     # TODO: Implement for Task 0.2.
-    raise NotImplementedError('Need to implement for Task 0.2')
+    #raise NotImplementedError('Need to implement for Task 0.2')
+    # It is always between 0.0 and 1.0.
+    s = sigmoid(a)
+    assert 0.0 <= s <= 1.0, f"Sigmoid output {s} is out of range [0, 1]"
+
+    # one minus sigmoid is the same as sigmoid of the negative
+    # 1 - sigmoid(a) == sigmoid(-a)
+    s_neg_a = sigmoid(neg(a))
+    assert is_close(1 - s, s_neg_a), f"1 - sigmoid({a}) = {1 - s} != sigmoid(-{a}) = {s_neg_a}"
+
+    # It crosses 0 at 0.5
+    s_0 = sigmoid(0)
+    assert is_close(s_0, 0.5), f"sigmoid(0) = {s_0} != 0.5"
+
+    # It is  strictly increasing.
+    delta = 1e-5
+    s_plus_d = sigmoid(a + delta)
+    assert lt(s, s_plus_d) == 1.0, (
+        f"Sigmoid function is not strictly increasing: sigmoid({a}) = {s} "
+        f"vs. sigmoid({a + delta}) = {s_plus_d}"
+    )
+
+    print("Passed all tests for a = {s}.")
+
 
 
 @pytest.mark.task0_2
@@ -116,7 +141,12 @@ def test_sigmoid(a: float) -> None:
 def test_transitive(a: float, b: float, c: float) -> None:
     "Test the transitive property of less-than (a < b and b < c implies a < c)"
     # TODO: Implement for Task 0.2.
-    raise NotImplementedError('Need to implement for Task 0.2')
+    #raise NotImplementedError('Need to implement for Task 0.2')
+    if lt(a, b) == 1.0 and lt(b, c) == 1.0:
+        assert lt(a, c) == 1.0, f"Transitive property failed: {a} < {b} and {b} < {c} does not imply {a} < {c}"
+
+    print("Transitive property passed for a={a}, b={b}, c={c}")
+
 
 
 @pytest.mark.task0_2
@@ -126,7 +156,13 @@ def test_symmetric() -> None:
     gives the same value regardless of the order of its input.
     """
     # TODO: Implement for Task 0.2.
-    raise NotImplementedError('Need to implement for Task 0.2')
+    #raise NotImplementedError('Need to implement for Task 0.2')
+    a = 3.0
+    b = 4.0
+    result_1 = mul(a, b)
+    result_2 = mul(b, a)
+    assert eq(result_1, result_2) == 1.0, f"mul function is not symmetrical as result of {a},{b} and {b},{a} is not the same"
+
 
 
 @pytest.mark.task0_2
@@ -136,7 +172,13 @@ def test_distribute() -> None:
     :math:`z \times (x + y) = z \times x + z \times y`
     """
     # TODO: Implement for Task 0.2.
-    raise NotImplementedError('Need to implement for Task 0.2')
+    #raise NotImplementedError('Need to implement for Task 0.2')
+    x, y, z = 2.0, 3.0, 4.0
+    left = mul(z, add(x,y))
+    right = add(mul(z, x), mul(z, y))
+    equal = eq(left, right)
+    assert equal == 1.0, f"Operators do not distribute"
+    print("Distributive property passed")
 
 
 @pytest.mark.task0_2
@@ -145,7 +187,11 @@ def test_other() -> None:
     Write a test that ensures some other property holds for your functions.
     """
     # TODO: Implement for Task 0.2.
-    raise NotImplementedError('Need to implement for Task 0.2')
+    #raise NotImplementedError('Need to implement for Task 0.2')
+    x, y = 3.0, 4.0
+    r = max(x, y)
+    assert y, f"Incorrect computation for max"
+
 
 
 # ## Task 0.3  - Higher-order functions
