@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Iterable, List, Tuple
+from typing import Any, Iterable, List, Tuple, Set
 
 from typing_extensions import Protocol
 
@@ -23,7 +23,17 @@ def central_difference(f: Any, *vals: Any, arg: int = 0, epsilon: float = 1e-6) 
         An approximation of $f'_i(x_0, \ldots, x_{n-1})$
     """
     # TODO: Implement for Task 1.1.
-    raise NotImplementedError('Need to implement for Task 1.1')
+    #raise NotImplementedError('Need to implement for Task 1.1')
+    
+    # Values with a small positive shift
+    vals_positive = list(vals)
+    vals_positive[arg] += epsilon
+
+    # Values with a small negative shift
+    vals_negative = list(vals)
+    vals_negative[arg] -= epsilon
+
+    return (f(*vals_positive) - f(*vals_negative)) / (2*epsilon)
 
 
 variable_count = 1
@@ -62,7 +72,22 @@ def topological_sort(variable: Variable) -> Iterable[Variable]:
         Non-constant Variables in topological order starting from the right.
     """
     # TODO: Implement for Task 1.4.
-    raise NotImplementedError('Need to implement for Task 1.4')
+    #raise NotImplementedError('Need to implement for Task 1.4')
+    visited: Set[int] = set()
+    topological_order: List[Variable] = []
+
+    def DFS(node: Variable):
+        if node.unique_id in visited or node.is_constant():
+            return 
+        
+        visited.add(node.unique_id)
+        for parent in node.parents:
+            DFS(parent)
+        topological_order.append(node)
+
+    DFS(variable)
+    return reversed(topological_order)
+
 
 
 def backpropagate(variable: Variable, deriv: Any) -> None:
@@ -77,7 +102,34 @@ def backpropagate(variable: Variable, deriv: Any) -> None:
     No return. Should write to its results to the derivative values of each leaf through `accumulate_derivative`.
     """
     # TODO: Implement for Task 1.4.
-    raise NotImplementedError('Need to implement for Task 1.4')
+    #raise NotImplementedError('Need to implement for Task 1.4')
+
+    # Get topological order
+    topological_order = list(topological_sort(variable))
+
+    # Dictionary to store intermediate derivatives
+    derivatives = {var.unique_id: 0 for var in topological_order}
+    derivatives[variable.unique_id] = deriv
+
+    # Traverse graph
+    for var in topological_order:
+        d_output = derivatives[var.unique_id]
+
+        if var.is_constant():
+            continue
+
+        # Chain rule to propagate derivatives to parents
+        for parent, parent_deriv in var.chain_rule(d_output):
+            if parent.unique_id in derivatives:
+                derivatives[parent.unique_id] += parent_deriv
+            else:
+                derivatives[parent.unique_id] = parent_deriv
+
+        # If leaf node, accumulate derivatives
+        if var.is_leaf():
+            var.accumulate_derivative(derivatives[var.unique_id])
+            
+
 
 
 @dataclass
